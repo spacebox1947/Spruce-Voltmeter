@@ -1,3 +1,10 @@
+/*
+ * Code based on a project by Shahariar
+ * Find the original project and Code @
+ * https://create.arduino.cc/projecthub/PSoC_Rocks/arduino-negative-voltmeter-993902
+ * 
+ */
+
 // LIBRARIES
 // i2c and u8g library for 1306 oled display
 #include <Wire.h>
