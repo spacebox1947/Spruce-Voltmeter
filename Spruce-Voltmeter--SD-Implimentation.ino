@@ -13,27 +13,32 @@
 #include <SPI.h>
 
 // CONSTANTS
+// 25V Reader
 #define R_LOW 100           // 100k or 10k resistor, 1%, smd1206, 1/10 watt
 #define R_HIGH 5000         // 5M or 500k  resistor, 1%, smd1206, 1/10 watt
+
+// 5V Reader
+//#define R_LOW 500
+//#define R_HIGH 5000
+
+// 5V Reader with Small Bois
+//#define R_LOW 100
+//#define R_HIGH 1000
+
 #define AREF 1.1            // Aref pin voltage 
 #define ADC_RESOLUTION 1023 // 10 bit ADC
 #define SAMPSPER 150        // samples per read of analog pin for value averaging
+
 
 U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);     // I2C OLED  Display instance
 
 // measuring analog ins; for use with measureChannel() function
 int analogPins[] = {A1, A2, A3};
 int aPinsLength = 3;
+int SIGFIGS = 6;           // How many figs to print/save
 
 // File for Filing
 File myFile;
-/*
-String fileName = "";
-String fileNamePrefix = "Sample-";
-String fileNameSuffix = ".txt";
-String fileNameNumber = "";
-int fileNumber = 0;
-*/
 
 // keep track of number of lines save in SD file
 int linesWritten = 0;
@@ -41,7 +46,7 @@ int linesPerSave = 100;
 
 // Variables for volty maths
 long half_Aref = 0; // adc 0 for reading half AREF = 550mv, should read 512
-int dump = 0;       // discarding first adc conversion (only used for half_Aref
+//int dump = 0;       // discarding first adc conversion (only used for half_Aref
 float voltVals[3];  // calculating measured voltVals from ADC ch 1-3
 
 // control if Serial is used for printing/debugging
@@ -133,7 +138,7 @@ void loop(void) {
 
     ////////////////////////////////////////////////////////////////////// 
     /// Half AREF measurement ///    
-    dump = analogRead(A0); // discard first adc convertion
+    int dump = analogRead(A0); // discard first adc convertion
     delay(10); // delay for channel switching stabilizaion
   
     // take 150 samples and add them up
@@ -152,12 +157,19 @@ void loop(void) {
       voltVals[i] = measureChannel(analogPins[i], half_Aref);
     }
 
-    // old volt measuring code died here
+    // old volt measuring code died here, see FUNctions
     
     ////////////////////////////////////////////////////////////////////// 
     // Format string for Serial
     if (printSerial) {
-      Serial.println(String(voltVals[0]) + "\t" + String(voltVals[1]) + "\t" + String(voltVals[2]) + "\t" + String(half_Aref));
+      //Serial.println(String(voltVals[0]) + "\t" + String(voltVals[1]) + "\t" + String(voltVals[2]) + "\t" + String(half_Aref));
+      Serial.print(voltVals[0], SIGFIGS);
+      Serial.print("\t");
+      Serial.print(voltVals[1], SIGFIGS);
+      Serial.print("\t");
+      Serial.print(voltVals[1], SIGFIGS);
+      Serial.print("\t");
+      Serial.println(half_Aref);
     }
   
     // Format string for saving on SD card
@@ -165,7 +177,17 @@ void loop(void) {
       if (printSerial) {
         Serial.println("Attempting to Print to File");
       }
-      myFile.println(String(voltVals[0]) + ", " + String(voltVals[1]) + ", " + String(voltVals[2]) + ";");
+      //myFile.println(String(voltVals[0]) + ", " + String(voltVals[1]) + ", " + String(voltVals[2]) + ";");
+      for (int i = 0; i < aPinsLength; i++) {
+        if (i == aPinsLength - 1) {
+          myFile.print(voltVals[i], SIGFIGS);
+          myFile.println(";");
+        }
+        else {
+          myFile.print(voltVals[i], SIGFIGS);
+          myFile.print(", ");
+        }
+      }
     }
     else {
       if (printSerial) {
@@ -182,13 +204,7 @@ void loop(void) {
     //myFile.close();
     myFile.flush();
     linesWritten = 0;
-    /*
-    myFile = SD.open("Sample.txt", FILE_WRITE);
-    if (printSerial) {
-      Serial.println("Attempting to Re-Open same file for more sampling fun!");
-    }
-    */
-    delay(500); // delay for SD card to be ready for more writin' typing' and measurin'
+    delay(250); // delay for SD card to be ready for more writin' typing' and measurin'
     if (printSerial) {
       Serial.println("Moving On ...");
     }
