@@ -56,28 +56,7 @@ long half_Aref = 0; // adc 0 for reading half AREF = 550mv, should read 512
 float voltVals[3];  // calculating measured voltVals from ADC ch 1-3
 
 // control if Serial is used for printing/debugging
-bool printSerial = true;
-
-//////////////////////////////////////////////////////////
-/// Oled Loop Draw Function ///
-void draw(void) {
-  
-  // set font for text
-  u8g.setFont(u8g_font_5x8);
-  u8g.drawStr( 0, 6, "Chan-1   Chan-2   Chan-3");
-  
-  // set font for number
-  u8g.setFont(u8g_font_7x13B);
-  
-  // print voltages measured on OLED
-  u8g.setPrintPos(0, 20);u8g.print(voltVals[0],1);
-  u8g.setPrintPos(45, 20);u8g.print(voltVals[1],1);
-  u8g.setPrintPos(90, 20);u8g.print(voltVals[1],1);
-  
-  // set font and print units
-  u8g.setFont(u8g_font_5x8);
-  u8g.drawStr( 0, 32, "volts    volts    volts");
-}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+bool printSerial = true;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 
 //////////////////////////////////////////////////////////
 void setup(void) {
@@ -225,6 +204,27 @@ void loop(void) {
   // hopefully this never executes
   else {}
 }
+
+//////////////////////////////////////////////////////////
+/// Oled Loop Draw Function ///
+void draw(void) {
+  
+  // set font for text
+  u8g.setFont(u8g_font_5x8);
+  u8g.drawStr( 0, 6, "Chan-1   Chan-2   Chan-3");
+  
+  // set font for number
+  u8g.setFont(u8g_font_7x13B);
+  
+  // print voltages measured on OLED
+  u8g.setPrintPos(0, 20);u8g.print(voltVals[0],1);
+  u8g.setPrintPos(45, 20);u8g.print(voltVals[1],1);
+  u8g.setPrintPos(90, 20);u8g.print(voltVals[1],1);
+  
+  // set font and print units
+  u8g.setFont(u8g_font_5x8);
+  u8g.drawStr( 0, 32, "volts    volts    volts");
+}             
 
 ///////////////////////////////////////////////////////////////////////
 // FUNctions!
