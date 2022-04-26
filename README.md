@@ -1,9 +1,11 @@
-# Spruce-Voltmeter
-Arduino Project With Borrowed Ideas for Wilderness Data
-
+# Spruce-Voltmeter 🌲
+Arduino project with open-source ideas for environmental monitoring
 Based on a project by Shahariar @ https://create.arduino.cc/projecthub/PSoC_Rocks/arduino-negative-voltmeter-993902
 
-Goal is to go into the Alaskan Wilderness and listen to Spruce trees, and borrow their electrons.
+
+Goal is to borrow electrons from [spruce trees](https://en.wikipedia.org/wiki/Spruce), a widespread organism on this planet: <br>
+<img src="https://www.conifers.org/pi/pi/02.gif" width=600, alt="spruce range on Earth from The Gymnosperm Database"></img>
+
 
 <<<<<<< HEAD
 Needs:
@@ -16,7 +18,9 @@ Needs:
 
 ## Notes on Spruce electrophysiology:
 
-We have fashioned this measurement device to monitor the environment: specifically *the electrical environment within the context of the tree's physiology* - which is, in turn, responding to the wider ecosystem the tree is rooted within. We anticipate a drifting, steady-state "resting" potential during most times with occasional nervous-system responses: action potentials, slow-wave potential, and others. The following design notes help describe both the **steady-state** and **responsive** components of the tree's physiology.
+We have fashioned this measurement device to monitor the environment: specifically *the electrical environment within the context of the tree's [physiology](https://en.wikipedia.org/wiki/Plant_physiology#Aims)* - which is, in turn, responding to the wider ecosystem the tree is rooted within. We anticipate a drifting, steady-state "resting" potential during most times with occasional nervous-system responses: action potentials, slow-wave potential, and others. The following design notes help describe both the **steady-state** and **responsive** components of the tree's physiology.
+
+Living tree as [viable system](https://en.wikipedia.org/wiki/Viable_system_model). 
 
 ### Steady-State Electrophysiology
 
@@ -31,7 +35,7 @@ From the same, evidence that "resting" potential is common to the entire body of
 ### Responsive Electrophysiology
 
 First of all, we quote Fromm and Lautner 2007 to clarify the extracellular measurements we are attempting:
->In general, two different methods area being used to measure electric potentials in plants, viz. extracellular and intracellular recording. Extracellular potential measurements on the surface of higher plants have been widely performed in the past, and offer the advantage of being able to detect electrical potential differences over long periods of time (several days). By contrast, intracellular measurements with penetrating glass microelectrodes are only effective for short periods of time such as 1-2h...
+>In general, two different methods are being used to measure electric potentials in plants, viz. extracellular and intracellular recording. Extracellular potential measurements on the surface of higher plants have been widely performed in the past, and offer the advantage of being able to detect electrical potential differences over long periods of time (several days). By contrast, intracellular measurements with penetrating glass microelectrodes are only effective for short periods of time such as 1-2h...
 
 The same authors provide a helpful summary of electrical signals in plants:
 
