@@ -4,8 +4,8 @@
  * https://create.arduino.cc/projecthub/PSoC_Rocks/arduino-negative-voltmeter-993902
  * 
  * 
- * 
- * 
+ * Uses 5 DIP switches to name files @ startup
+ * Currently, OLED code is commented out simply for speed of development.
  * 
  * 
  * 
@@ -24,11 +24,11 @@
 #define R_LOW 100           // 100k or 10k resistor, 1%, smd1206, 1/10 watt
 #define R_HIGH 5000         // 5M or 500k  resistor, 1%, smd1206, 1/10 watt
 
-// 5V Reader
+// 5V Reader with larger resistors
 //#define R_LOW 500
 //#define R_HIGH 5000
 
-// 5V Reader with Small Bois
+// 5V Reader with Small Bois resistors
 //#define R_LOW 100
 //#define R_HIGH 1000
 
@@ -38,37 +38,40 @@
 
 //U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);     // I2C OLED  Display instance
 
+// File for Filing
+File myFile;
+// use 5 switches on DIP to name a file in binary
+// utilized in FUNction: buildFileNameBinary()
+// pins do not neet to be set up for a filename to be made,
+// but filename will probably be 00000 or 11111
+int fileNamePins[] = {5, 6, 7, 8, 9};
+String fileName = "";
+
 // measuring analog ins; for use with measureChannel() function
 int analogPins[] = {A1, A2, A3};
 int aPinsLength = 3;
-int SIGFIGS = 6;           // How many figs to print/save
+int SIGFIGS = 5;           // How many figs to print/save
 
-// File for Filing
-File myFile;
-Sd2Card card;
-SdVolume volume;
-SdFile root;
-
-//Pin Control
-// Use DIP switches to manage writing of data from unused pins
-// currently unimplemented
-bool v1;
-bool v2;
-bool v3;
-int controlPins[] = {3, 4, 5};
-
+// Digitl Pin Control
+// Use 3 DIP switches to manage writing of data from unused pins
+// print/write "NULL" if current test lead is OFF
+// NULL is wonderful
+int controlPins[] = {2, 3, 4};
 
 // keep track of number of lines save in SD file
 int linesWritten = 0;
-int linesPerSave = 100;
+int linesPerSave = 50;
 
 // Variables for volty maths
 long half_Aref = 0; // adc 0 for reading half AREF = 550mv, should read 512
-//int dump = 0;       // discarding first adc conversion (only used for half_Aref
 float voltVals[3];  // calculating measured voltVals from ADC ch 1-3
 
 // control if Serial is used for printing/debugging
-bool printSerial = true;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+bool printSerial = true;      
+
+// measure the length of one data cycle
+int currentMs;
+int lastMs;
 
 //////////////////////////////////////////////////////////
 void setup() {
@@ -76,40 +79,17 @@ void setup() {
     Serial.begin(9600);
     while(!Serial) {;}
   }
-
-  /*
-   * Currently:
-   * Reaches "Success! Moving On" and proceeds to loops through serial poutput,
-   * restarts @ Wiring is correct
-   * Does not list any files on root, but also throws no errors.
-   * Never reaches loop
-   */
-
-  if (!card.init(SPI_HALF_SPEED, 10)) {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("* is a card inserted?");
-    Serial.println("* is your wiring correct?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module?");
-    while (1);
-  } else {
-    Serial.println("Wiring is correct and a card is present.");
-  }
-
-  if (!volume.init(card)) {
-    if (printSerial) {
-      Serial.println("error");
-    }
-    while(1);
-  }
-
-  root.openRoot(volume);
-  root.ls(LS_R | LS_DATE | LS_SIZE);
-
-  delay(1000);
+  // generate 5 letter string from DIP switch on digiPins
+  // assigned @ fileNamePins[] = {5, 6, 7, 8, 9};
+  // these pins should be set BEFORE powering ard if you want a unique name
+  fileName = buildFileNameBinary();
+  
+  delay(500);
 
   if(!SD.begin(10)) { //10 is the pin our SD card reader is designed to speak to.
     if (printSerial) {
       Serial.println("Failure"); //sometimes fail message prints anyway
+      Serial.println("Check SD card is inserted and wired properly, unless it is not");
     }
     while(1);
   }
@@ -117,33 +97,29 @@ void setup() {
     Serial.println("Success! Moving on...");
   }
   
-  myFile = SD.open("Sampl2.txt", FILE_WRITE);
+  myFile = SD.open(fileName, FILE_WRITE);
   if (printSerial) {
     Serial.print("Opening SD file for writing of Data, Please: ");
-    Serial.println("Sample.txt");
-  }
-  delay(1000); // unnecessary debugging delay
-  if (printSerial) {
-    Serial.println("Moving On...");
+    Serial.println(fileName);
   }
 
-  
-  
-  // awesome code
-  delay(500);                // delay for idk
+  delay(500);                // delay to make sure ADC is stable
   analogReference(INTERNAL); // set 1.1v internal reference
   delay(500);                // delay to stabilize aref voltage
+
   /*
   u8g.setRot180();           // change display orientation
   if (printSerial) {
     Serial.println("Doing a thing with the OLED Display");
   }
   */
+
+  currentMs = millis();
+  lastMs = millis();
 }
 
 //////////////////////////////////////////////////////////
 void loop() {
-
   if (linesWritten < linesPerSave) {
 
     delay(5); // delay before using I2C OLED
@@ -180,20 +156,32 @@ void loop() {
     for (int i = 0; i < aPinsLength; i++) {
       voltVals[i] = measureChannel(analogPins[i], half_Aref);
     }
-
-    // old volt measuring code died here, see FUNctions
     
     ////////////////////////////////////////////////////////////////////// 
     // Format string for Serial
     if (printSerial) {
-      //Serial.println(String(voltVals[0]) + "\t" + String(voltVals[1]) + "\t" + String(voltVals[2]) + "\t" + String(half_Aref));
-      Serial.print(voltVals[0], SIGFIGS);
-      Serial.print("\t");
-      Serial.print(voltVals[1], SIGFIGS);
-      Serial.print("\t");
-      Serial.print(voltVals[1], SIGFIGS);
-      Serial.print("\t");
-      Serial.println(half_Aref);
+      for (int i = 0; i < aPinsLength; i++) {
+        if (i == aPinsLength - 1) {
+          if (digitalRead(controlPins[i])) {
+            Serial.print(voltVals[i], SIGFIGS);
+          }
+          else {
+            Serial.print("NULL");
+          }
+          Serial.print("\t\t");
+        // end w/ beatiful half_Aref value
+        Serial.println(half_Aref);
+        }
+        else {
+          if (digitalRead(controlPins[i])) {
+            Serial.print(voltVals[i], SIGFIGS);
+          }
+          else {
+            Serial.print("NULL");
+          }
+          Serial.print("\t\t");
+        }
+      }
     }
   
     // Format string for saving on SD card
@@ -201,14 +189,25 @@ void loop() {
       if (printSerial) {
         Serial.println("Attempting to Print to File");
       }
-      //myFile.println(String(voltVals[0]) + ", " + String(voltVals[1]) + ", " + String(voltVals[2]) + ";");
+
+      // print to myFile
       for (int i = 0; i < aPinsLength; i++) {
         if (i == aPinsLength - 1) {
-          myFile.print(voltVals[i], SIGFIGS);
+          if (digitalRead(controlPins[i])) {
+            myFile.print(voltVals[i], SIGFIGS);
+          }
+          else {
+            myFile.print("NULL");
+          }
           myFile.println(";");
         }
         else {
-          myFile.print(voltVals[i], SIGFIGS);
+          if (digitalRead(controlPins[i])) {
+            myFile.print(voltVals[i], SIGFIGS);
+          }
+          else {
+            myFile.print("NULL");
+          }
           myFile.print(", ");
         }
       }
@@ -228,16 +227,23 @@ void loop() {
       Serial.println("Flushing current set of samples ...");
     }
     
-    //myFile.close(); //why not close?
-    myFile.flush();
+    myFile.flush(); //ensure bytes are written to SD, preserve data with powerloss
     linesWritten = 0;
-    delay(250); // delay for SD card to be ready for more writin', typin', and measurin'
+    //delay(250); // delay for SD card to be ready for more writin', typin', and measurin'
     if (printSerial) {
       Serial.println("Moving On ...");
     }
   }
-  // hopefully this never executes
-  else {}
+
+  // check how long this void loop took
+  // print it
+  currentMs = millis();
+  if (printSerial) {
+    Serial.print("Time for this loop:\t");
+    Serial.print(currentMs-lastMs);
+    Serial.println(" ms");
+  }
+  lastMs = currentMs;
 }
 
 //////////////////////////////////////////////////////////
@@ -255,7 +261,7 @@ void draw() {
   // print voltages measured on OLED
   u8g.setPrintPos(0, 20);u8g.print(voltVals[0],1);
   u8g.setPrintPos(45, 20);u8g.print(voltVals[1],1);
-  u8g.setPrintPos(90, 20);u8g.print(voltVals[1],1);
+  u8g.setPrintPos(90, 20);u8g.print(voltVals[2],1);
   
   // set font and print units
   u8g.setFont(u8g_font_5x8);
@@ -266,11 +272,24 @@ void draw() {
 // FUNctions!
 ///////////////////////////////////////////////////////////////////////
 
+String buildFileNameBinary() {
+  // collect digiPins and make a string!
+  // change filename extension and impress your friends
+  String s;
+  for (int i = 0; i < 5; i++) {
+    s += String(digitalRead(fileNamePins[i]));
+  }
+  s = s + ".txt";
+  if (printSerial) {
+    Serial.println(s);
+  }
+  return s;
+}
+
 float measureChannel(int pin, long h_aref) {
  /* measure an analog pin (as defined in analogPins[])
   * return adjusted voltage value v, a float
   */
-
   long ch = 0;
   float v;
   
