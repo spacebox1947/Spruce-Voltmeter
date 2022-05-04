@@ -3,12 +3,12 @@
  * Find the original project and Code @
  * https://create.arduino.cc/projecthub/PSoC_Rocks/arduino-negative-voltmeter-993902
  * 
- * 
- * Uses 5 DIP switches to name files @ startup
- * OLED code is back to make life difficult.
- * 
- * 
- * 
+ * This is a poor man's repository of early May 3 2022 code.
+ * Contains ALL code for printSerial(debugging), OLED, and SD card.
+ * This WILL NOT RUN on the Uno, 
+ * because the chip doesnt have enough memory to get the SD card working.
+ * Or so I think.
+ * FWIW.
  * 
  */
 
@@ -89,8 +89,7 @@ void setup() {
 
   if(!SD.begin(10)) { //10 is the pin our SD card reader is designed to speak to.
     if (printSerial) {
-      Serial.println("Failure"); //sometimes fail message prints anyway
-      Serial.println("Check SD card is inserted and wired properly, unless it is not");
+      Serial.println("Failure\tCheck SD card is inserted and wired properly ... unless it is not");
     }
     while(1);
   }
@@ -115,7 +114,7 @@ void setup() {
   }
   
 
-  currentMs = millis();
+  currentMs = millis();      // start millis() timer
   lastMs = millis();
 }
 
@@ -230,10 +229,8 @@ void loop() {
     }
 
     printMs();
-    
     myFile.flush(); //ensure bytes are written to SD, preserve data with powerloss
     linesWritten = 0;
-    //delay(250); // delay for SD card to be ready for more writin', typin', and measurin'
     if (printSerial) {
       Serial.println("Moving On ...");
     }

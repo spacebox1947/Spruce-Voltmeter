@@ -4,11 +4,9 @@
  * https://create.arduino.cc/projecthub/PSoC_Rocks/arduino-negative-voltmeter-993902
  * 
  * 
- * Uses 5 DIP switches to name files @ startup
- * OLED code is back to make life difficult.
- * 
- * 
- * 
+ * This version uses MINIMAL serial so that OLED, SD, and everything works.
+ * May 9 2022
+ * See SV-SD-DoesNotRun for bonus code
  * 
  */
 
@@ -89,13 +87,9 @@ void setup() {
 
   if(!SD.begin(10)) { //10 is the pin our SD card reader is designed to speak to.
     if (printSerial) {
-      Serial.println("Failure"); //sometimes fail message prints anyway
-      Serial.println("Check SD card is inserted and wired properly, unless it is not");
+      Serial.println("Failure\tCheck SD card is inserted and wired properly ... unless it is not");
     }
     while(1);
-  }
-  if (printSerial) {
-    Serial.println("Success! Moving on...");
   }
   
   myFile = SD.open(fileName, FILE_WRITE);
@@ -110,12 +104,8 @@ void setup() {
 
   
   u8g.setRot180();           // change display orientation
-  if (printSerial) {
-    Serial.println("Doing a thing with the OLED Display");
-  }
   
-
-  currentMs = millis();
+  currentMs = millis();      // start millis() timer
   lastMs = millis();
 }
 
@@ -151,6 +141,7 @@ void loop() {
     half_Aref = half_Aref/SAMPSPER;
 
 
+
     ////////////////////////////////////////////////////////////////////// 
     // measure each pin
     for (int i = 0; i < aPinsLength; i++) {
@@ -158,6 +149,13 @@ void loop() {
     }
     
     ////////////////////////////////////////////////////////////////////// 
+    /*
+    if (printSerial) {
+      Serial.print(half_Aref);
+      Serial.println("V");
+    }
+    */
+
     // Format string for Serial
     if (printSerial) {
       for (int i = 0; i < aPinsLength; i++) {
@@ -168,7 +166,7 @@ void loop() {
           else {
             Serial.print("NULL");
           }
-          Serial.print("\t\t");
+          Serial.print("\t");
         // end w/ beatiful half_Aref value
         Serial.println(half_Aref);
         }
@@ -186,10 +184,6 @@ void loop() {
   
     // Format string for saving on SD card
     if (myFile) {
-      if (printSerial) {
-        Serial.println("Attempting to Print to File");
-      }
-
       // print to myFile
       for (int i = 0; i < aPinsLength; i++) {
         if (i == aPinsLength - 1) {
@@ -215,7 +209,7 @@ void loop() {
     }
     else {
       if (printSerial) {
-        Serial.println("Error sending data to SD card. Call for help. Get out the megaphones! Get out the alpenhorns! Requesting air raid sirens x5!");
+        Serial.println("Error sending data to SD card. Call for help.");
       }
     }
     printMs();
@@ -224,19 +218,9 @@ void loop() {
   
   // save current sd file, re-open same file + wait a bit
   else if (linesWritten >= linesPerSave) {
-    
-    if (printSerial) {
-      Serial.println("Flushing current set of samples ...");
-    }
-
-    printMs();
-    
+    //printMs();
     myFile.flush(); //ensure bytes are written to SD, preserve data with powerloss
     linesWritten = 0;
-    //delay(250); // delay for SD card to be ready for more writin', typin', and measurin'
-    if (printSerial) {
-      Serial.println("Moving On ...");
-    }
   }
 }
 
@@ -273,11 +257,6 @@ void printMs() {
   thisCycleMs = currentMs-lastMs;
   myFile.print(thisCycleMs);
   myFile.println(";");
-  if (printSerial) {
-    Serial.print("Time for this loop:\t");
-    Serial.print(thisCycleMs);
-    Serial.println(" ms");
-  }
   lastMs = currentMs;
 }
 
@@ -289,9 +268,6 @@ String buildFileNameBinary() {
     s += String(digitalRead(fileNamePins[i]));
   }
   s = s + ".txt";
-  if (printSerial) {
-    Serial.println(s);
-  }
   return s;
 }
 
